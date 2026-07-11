@@ -2,26 +2,41 @@ import { createClient } from '@supabase/supabase-js'
 import { logger } from '../logger'
 import type { User, WatchlistItem, UserStats, ApiResponse } from '../../types'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const rawSupabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-if (!supabaseUrl || !supabaseKey) {
-  logger.error('Missing Supabase configuration')
+const isValidHttpUrl = (url: string) => {
+  if (!url || typeof url !== 'string') return false
+  if (url.includes('your_supabase_url')) return false
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+const hasValidConfig = isValidHttpUrl(rawSupabaseUrl) && Boolean(rawSupabaseKey && !rawSupabaseKey.includes('your_supabase_anon_key'))
+
+const supabaseUrl = hasValidConfig ? rawSupabaseUrl : 'https://placeholder.supabase.co'
+const supabaseKey = hasValidConfig ? rawSupabaseKey : 'placeholder-anon-key'
+
+if (!hasValidConfig) {
+  logger.warn('Using fallback Supabase configuration for static/demo mode')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
 logger.info('Supabase client initialized', { 
-  hasUrl: !!supabaseUrl, 
-  hasKey: !!supabaseKey,
-  url: supabaseUrl 
+  hasUrl: hasValidConfig, 
+  hasKey: hasValidConfig
 })
 
 // Authentication utilities
 export const auth = {
   async signUp(email: string, password: string, name: string): Promise<ApiResponse<{ user: User; session: any }>> {
     try {
-      if (!supabaseUrl || !supabaseKey) {
+      if (!hasValidConfig) {
         const mockUser: User = {
           id: `mock_${Date.now()}`,
           email,
@@ -69,7 +84,7 @@ export const auth = {
 
   async signIn(email: string, password: string): Promise<ApiResponse<{ user: User; session: any }>> {
     try {
-      if (!supabaseUrl || !supabaseKey) {
+      if (!hasValidConfig) {
         if (typeof window !== 'undefined') {
           const mockUser = localStorage.getItem('mock_user')
           const mockSession = localStorage.getItem('mock_session')
