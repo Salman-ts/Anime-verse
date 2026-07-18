@@ -8,6 +8,7 @@ import { Badge } from '../ui/badge'
 import { ThreeScene } from '../3d/ThreeScene'
 import { jikanApi, type JikanAnime } from '../../services/jikan'
 import { animechanApi, type AnimeQuote } from '../../services/animechan'
+import { ImageWithFallback } from '../figma/ImagewithFallback'
 import { useAppContext } from '../../context/AppContext'
 
 const FALLBACK_HERO: JikanAnime[] = [
@@ -293,15 +294,9 @@ export function HeroSection() {
                 onClick={handleDetails}
                 className="relative group cursor-pointer w-72 sm:w-80 lg:w-96 rounded-2xl overflow-hidden shadow-2xl gradient-border card-hover"
               >
-                <img
+                <ImageWithFallback
                   src={current.images?.webp?.large_image_url || current.images?.jpg?.large_image_url || 'https://cdn.myanimelist.net/images/anime/1015/138006l.jpg'}
                   alt={current.title}
-                  onError={(e) => {
-                    const target = e.currentTarget
-                    if (target.src !== 'https://image.tmdb.org/t/p/original/mX99Gkt7K5hV5jKjYffA0nS5S1n.jpg') {
-                      target.src = 'https://image.tmdb.org/t/p/original/mX99Gkt7K5hV5jKjYffA0nS5S1n.jpg'
-                    }
-                  }}
                   className="w-full aspect-[2/3] object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />

@@ -6,6 +6,7 @@ import { PlayCircle, Info, Sparkles } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { jikanApi, type JikanAnime } from '../../services/jikan'
+import { ImageWithFallback } from '../figma/ImagewithFallback'
 import { useAppContext } from '../../context/AppContext'
 
 const FALLBACK_FEATURED: JikanAnime[] = [
@@ -190,7 +191,7 @@ export function FeaturedSection() {
                     onClick={handleDetails}
                     className="relative cursor-pointer group w-64 sm:w-72 lg:w-80 rounded-2xl overflow-hidden shadow-2xl gradient-border"
                   >
-                    <img
+                    <ImageWithFallback
                       src={current.images?.webp?.large_image_url || current.images?.jpg?.large_image_url || ''}
                       alt={current.title}
                       className="w-full aspect-[2/3] object-cover transition-transform duration-500 group-hover:scale-105"

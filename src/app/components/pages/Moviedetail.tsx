@@ -17,7 +17,7 @@ import { reviews as reviewsApi, watchlist as watchlistApi } from '../../utils/su
 import { toast } from 'sonner'
 
 export function MovieDetail() {
-  const { state, setState } = useAppContext()
+  const { state, setState, refreshWatchlist } = useAppContext()
   const [content, setContent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [characters, setCharacters] = useState<any[]>([])
@@ -61,6 +61,11 @@ export function MovieDetail() {
     return () => { mounted = false }
   }, [state.selectedContentId])
 
+  useEffect(() => {
+    const isSaved = state.watchlist?.some((item: any) => String(item.contentId) === String(state.selectedContentId))
+    setInWatchlist(Boolean(isSaved))
+  }, [state.watchlist, state.selectedContentId])
+
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!state.user) {
@@ -86,24 +91,31 @@ export function MovieDetail() {
   }
 
   const handleAddToWatchlist = async () => {
-    if (!state.user) {
-      toast.error('Sign in to add to your watchlist')
-      setState({ currentPage: 'auth' })
-      return
-    }
     const id = state.selectedContentId || 1
-    const res = await watchlistApi.add(
-      String(id),
-      content?.title || 'Title',
-      content?.type || 'anime',
-      content?.poster || '',
-      'Planned'
-    )
-    if (res.error) {
-      toast.error(res.error)
+    if (inWatchlist) {
+      const res = await watchlistApi.remove(String(id))
+      if (res.error && res.error !== 'Please sign in to manage your watchlist') {
+        toast.error(res.error)
+      } else {
+        setInWatchlist(false)
+        toast.success('Removed from your Watchlist!')
+        await refreshWatchlist()
+      }
     } else {
-      setInWatchlist(true)
-      toast.success('Added to your Watchlist!')
+      const res = await watchlistApi.add(
+        String(id),
+        content?.title || 'Title',
+        content?.type || 'anime',
+        content?.poster || '',
+        'Planned'
+      )
+      if (res.error && res.error !== 'Please sign in to manage your watchlist') {
+        toast.error(res.error)
+      } else {
+        setInWatchlist(true)
+        toast.success('Added to your Watchlist!')
+        await refreshWatchlist()
+      }
     }
   }
 

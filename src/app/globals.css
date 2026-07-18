@@ -10,24 +10,25 @@
     --font-heading: 'Righteous', cursive;
     --font-body: 'Poppins', sans-serif;
 
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* ── Light Mode: Warm alabaster palette ── */
+    --background: 240 10% 97%;
+    --foreground: 240 20% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 20% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 20% 12%;
     --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+    --secondary: 240 8% 93%;
+    --secondary-foreground: 240 20% 16%;
+    --muted: 240 8% 93%;
+    --muted-foreground: 240 8% 45%;
+    --accent: 262 60% 95%;
+    --accent-foreground: 262 70% 40%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 240 8% 87%;
+    --input: 240 8% 87%;
     --ring: 262.1 83.3% 57.8%;
     --radius: 0.75rem;
 
@@ -37,15 +38,21 @@
     --cv-neon-cyan: 185 95% 55%;
     --cv-neon-red: 350 85% 55%;
 
-    /* Glow & Glass */
+    /* Glow & Glass — Light Mode */
     --glow-sm: 0 0 10px;
     --glow-md: 0 0 20px;
     --glow-lg: 0 0 40px;
-    --glass-bg: rgba(255, 255, 255, 0.06);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(0, 0, 0, 0.08);
     --glass-blur: 16px;
-    --glass-heavy-bg: rgba(255, 255, 255, 0.88);
-    --glass-heavy-border: rgba(0, 0, 0, 0.12);
+    --glass-heavy-bg: rgba(255, 255, 255, 0.92);
+    --glass-heavy-border: rgba(0, 0, 0, 0.10);
+
+    /* Theme-aware text for overlays */
+    --hero-text: 240 20% 12%;
+    --hero-text-muted: 240 8% 40%;
+    --episode-bg: rgba(255, 255, 255, 0.06);
+    --episode-bg-hover: rgba(255, 255, 255, 0.12);
   }
 
   .dark {
@@ -68,8 +75,17 @@
     --border: 240 12% 14%;
     --input: 240 12% 14%;
     --ring: 270 95% 65%;
+
+    /* Glow & Glass — Dark Mode */
+    --glass-bg: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.10);
     --glass-heavy-bg: rgba(15, 15, 35, 0.85);
     --glass-heavy-border: rgba(255, 255, 255, 0.08);
+
+    --hero-text: 210 40% 98%;
+    --hero-text-muted: 215 20% 65%;
+    --episode-bg: rgba(255, 255, 255, 0.06);
+    --episode-bg-hover: rgba(255, 255, 255, 0.12);
   }
 }
 
@@ -126,22 +142,25 @@
 .glass-card {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 100%
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(240, 240, 250, 0.65) 100%
   );
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.glass-card:hover {
+.dark .glass-card {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.04) 100%
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 100%
   );
-  border-color: hsl(var(--cv-neon-purple) / 0.3);
-  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255,255,255,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-card:hover {
+  border-color: hsl(var(--cv-neon-purple) / 0.5);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
 }
 
 /* ═══════════════════════════════════════════════
@@ -306,6 +325,67 @@
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 200ms;
 }
+
+/* ═══════════════════════════════════════════════
+   LIGHT MODE TEXT CONTRAST OVERRIDES
+   Ensures text is legible on light backgrounds
+   ═══════════════════════════════════════════════ */
+:root .text-white {
+  color: hsl(var(--foreground));
+}
+:root .text-white\/80 {
+  color: hsl(var(--foreground) / 0.8);
+}
+:root .text-white\/60 {
+  color: hsl(var(--foreground) / 0.6);
+}
+:root .text-white\/40 {
+  color: hsl(var(--foreground) / 0.4);
+}
+
+/* Hero section always uses white text (dark bg) */
+:root section[class*="min-h-screen"] .text-white,
+:root .bg-black .text-white,
+:root [class*="from-black"] .text-white {
+  color: #ffffff;
+}
+:root section[class*="min-h-screen"] .text-white\/80,
+:root .bg-black .text-white\/80 {
+  color: rgba(255, 255, 255, 0.8);
+}
+:root section[class*="min-h-screen"] .text-white\/60,
+:root .bg-black .text-white\/60 {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Light mode badge contrast */
+:root .bg-white\/5 {
+  background: rgba(0, 0, 0, 0.04);
+}
+:root .bg-white\/10 {
+  background: rgba(0, 0, 0, 0.06);
+}
+:root .bg-black\/60 {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Light mode border contrast */
+:root .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+:root .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Dark mode keeps originals */
+.dark .text-white { color: #ffffff; }
+.dark .text-white\/80 { color: rgba(255, 255, 255, 0.8); }
+.dark .text-white\/60 { color: rgba(255, 255, 255, 0.6); }
+.dark .text-white\/40 { color: rgba(255, 255, 255, 0.4); }
+.dark .bg-white\/5 { background: rgba(255, 255, 255, 0.05); }
+.dark .bg-white\/10 { background: rgba(255, 255, 255, 0.1); }
+.dark .border-white\/10 { border-color: rgba(255, 255, 255, 0.1); }
+.dark .border-white\/20 { border-color: rgba(255, 255, 255, 0.2); }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

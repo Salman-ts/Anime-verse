@@ -37,18 +37,45 @@ export function VideoPlayer({
   const [showControls, setShowControls] = useState(true)
   const hideControlsTimer = useRef<NodeJS.Timeout | null>(null)
 
-  // HLS.js initialization for .m3u8 streams
+  // HLS.js initialization for .m3u8 streams with automatic failover
   useEffect(() => {
     const video = videoRef.current
     if (!video || !src) return
 
-    const effectiveSrc = qualities.find(q => q.quality === selectedQuality)?.url || src
+    // If selectedQuality doesn't match available qualities, fallback to first quality or src
+    const currentQualityObj = qualities.find(q => q.quality === selectedQuality) || qualities[0]
+    const effectiveSrc = currentQualityObj?.url || src
     const isHLS = effectiveSrc.includes('.m3u8')
+    const fallbackDirectUrl = qualities.find(q => !q.url.includes('.m3u8'))?.url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+
+    if (qualities.length > 0 && !qualities.some(q => q.quality === selectedQuality)) {
+      if (qualities[0]?.quality) {
+        setSelectedQuality(qualities[0].quality)
+      }
+    }
 
     // Cleanup previous HLS instance
     if (hlsRef.current) {
       hlsRef.current.destroy()
       hlsRef.current = null
+    }
+
+    let networkErrorCount = 0
+
+    const triggerFallback = () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+      if (video.src !== fallbackDirectUrl) {
+        video.src = fallbackDirectUrl
+        video.load()
+        if (autoPlay) {
+          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+        } else {
+          setIsPlaying(false)
+        }
+      }
     }
 
     if (isHLS) {
@@ -66,20 +93,27 @@ export function VideoPlayer({
           hls.attachMedia(video)
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
             if (autoPlay) {
-              video.play().catch(() => {})
+              video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+            } else {
+              setIsPlaying(false)
             }
           })
           hls.on(Hls.Events.ERROR, (_: any, data: any) => {
             if (data.fatal) {
               switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
-                  hls.startLoad()
+                  networkErrorCount++
+                  if (networkErrorCount > 1) {
+                    triggerFallback()
+                  } else {
+                    hls.startLoad()
+                  }
                   break
                 case Hls.ErrorTypes.MEDIA_ERROR:
                   hls.recoverMediaError()
                   break
                 default:
-                  hls.destroy()
+                  triggerFallback()
                   break
               }
             }
@@ -87,22 +121,36 @@ export function VideoPlayer({
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
           // Safari native HLS support
           video.src = effectiveSrc
-          if (autoPlay) video.play().catch(() => {})
+          video.load()
+          if (autoPlay) {
+            video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+          } else {
+            setIsPlaying(false)
+          }
+        } else {
+          triggerFallback()
         }
       }).catch(() => {
-        // Fallback: try direct play
-        video.src = effectiveSrc
-        if (autoPlay) video.play().catch(() => {})
+        triggerFallback()
       })
     } else {
       // Direct MP4/WebM playback
       video.src = effectiveSrc
+      video.load()
       if (autoPlay) {
-        video.play().catch(() => {})
+        video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+      } else {
+        setIsPlaying(false)
       }
     }
 
+    const handleVideoError = () => {
+      triggerFallback()
+    }
+    video.addEventListener('error', handleVideoError)
+
     return () => {
+      video.removeEventListener('error', handleVideoError)
       if (hlsRef.current) {
         hlsRef.current.destroy()
         hlsRef.current = null
@@ -225,18 +273,26 @@ export function VideoPlayer({
   return (
     <div 
       ref={containerRef}
-      className="relative bg-black rounded-lg overflow-hidden w-full h-full cursor-pointer"
+      className="relative bg-black rounded-xl overflow-hidden w-full h-full flex items-center justify-center cursor-pointer select-none"
       onClick={togglePlay}
     >
       <video
         ref={videoRef}
         poster={poster}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain max-h-full"
         playsInline
-        crossOrigin="anonymous"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       />
+      
+      {/* Central Play Button Overlay when paused or autoplay blocked */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/20 transition-all z-40">
+          <div className="w-20 h-20 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-2xl border border-white/20 hover:scale-110 transition-transform">
+            <Play className="w-10 h-10 fill-white ml-1" />
+          </div>
+        </div>
+      )}
       
       {/* Controls Overlay */}
       <div 
@@ -293,12 +349,12 @@ export function VideoPlayer({
 
           {qualities.length > 1 && (
             <Select value={selectedQuality} onValueChange={(val: string) => setSelectedQuality(val)}>
-              <SelectTrigger className="w-20 h-7 bg-transparent border-white/20 text-white text-xs">
-                <SelectValue />
+              <SelectTrigger className="w-40 h-8 bg-black/60 border-white/20 text-white text-xs px-2.5 rounded-md hover:bg-black/80 transition-colors">
+                <SelectValue placeholder="Select Server" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
                 {qualities.map(quality => (
-                  <SelectItem key={quality.quality} value={quality.quality}>
+                  <SelectItem key={quality.quality} value={quality.quality} className="text-xs hover:bg-zinc-800 cursor-pointer">
                     {quality.quality}
                   </SelectItem>
                 ))}

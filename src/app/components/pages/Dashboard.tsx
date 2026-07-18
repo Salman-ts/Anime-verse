@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Progress } from '../ui/progress'
 import { ContentCard } from '../cards/ContentCards'
+import { ImageWithFallback } from '../figma/ImagewithFallback'
 import { useAppContext } from '../../context/AppContext'
 
 const dashboardData = {
@@ -195,7 +196,7 @@ export function Dashboard() {
                     {dashboardData.recentActivity.map((activity) => (
                       <div key={activity.id} className="flex items-center space-x-3">
                         <div className="w-12 h-16 flex-shrink-0">
-                          <img
+                          <ImageWithFallback
                             src={activity.poster}
                             alt={activity.title}
                             className="w-full h-full object-cover rounded"

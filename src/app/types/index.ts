@@ -60,7 +60,7 @@ export interface StreamingContent {
 }
 
 export interface StreamQuality {
-  quality: '480p' | '720p' | '1080p' | '4K'
+  quality: string
   url: string
   bitrate: number
 }

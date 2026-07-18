@@ -42,27 +42,30 @@ export function ContentCard({ content, viewMode, index }: ContentCardProps) {
 
   const handleWatchlistToggle = async (e: React.MouseEvent) => {
     e.stopPropagation()
-
-    if (!state.user) {
-      setState({ currentPage: 'auth' })
-      toast.error('Please sign in to manage your watchlist')
-      return
-    }
-
     setIsLoading(true)
     try {
-      const res = await watchlistApi.add(
-        content.id.toString(),
-        content.title,
-        content.type || 'anime',
-        content.poster,
-        'Planned'
-      )
-      if (res.error) {
-        toast.error(res.error)
+      if (isInWatchlist) {
+        const res = await watchlistApi.remove(content.id.toString())
+        if (res.error && res.error !== 'Please sign in to manage your watchlist') {
+          toast.error(res.error)
+        } else {
+          toast.success('Removed from your Watchlist!')
+          await refreshWatchlist()
+        }
       } else {
-        toast.success('Added to your Watchlist!')
-        await refreshWatchlist()
+        const res = await watchlistApi.add(
+          content.id.toString(),
+          content.title,
+          content.type || 'anime',
+          content.poster,
+          'Planned'
+        )
+        if (res.error && res.error !== 'Please sign in to manage your watchlist') {
+          toast.error(res.error)
+        } else {
+          toast.success('Added to your Watchlist!')
+          await refreshWatchlist()
+        }
       }
     } catch {
       toast.error('An error occurred updating watchlist')

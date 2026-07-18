@@ -11,19 +11,17 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
 
   const refreshWatchlist = useCallback(async () => {
-    if (user) {
-      try {
-        const { data, error } = await watchlistApi.get()
-        if (error && error !== 'Please sign in to view your watchlist') {
-          logger.warn('Failed to refresh watchlist', { error })
-        } else {
-          setWatchlist(data || [])
-        }
-      } catch (error) {
-        logger.warn('Watchlist refresh error', error)
+    try {
+      const { data, error } = await watchlistApi.get()
+      if (error && error !== 'Please sign in to view your watchlist') {
+        logger.warn('Failed to refresh watchlist', { error })
+      } else {
+        setWatchlist(data || [])
       }
+    } catch (error) {
+      logger.warn('Watchlist refresh error', error)
     }
-  }, [user])
+  }, [])
 
   const refreshStats = useCallback(async () => {
     if (user) {
@@ -128,6 +126,12 @@ export const useAuth = () => {
         }
       } else {
         logger.info('No existing session found')
+        try {
+          const { data } = await watchlistApi.get()
+          if (data) setWatchlist(data)
+        } catch {
+          // Ignore guest watchlist load error
+        }
       }
     } catch (error) {
       logger.error('Session initialization error', error)
